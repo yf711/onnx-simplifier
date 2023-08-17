@@ -27,6 +27,33 @@ Config config;
 
 std::shared_ptr<const ModelExecutor> ModelExecutor::instance_ = nullptr;
 
+bool IsSkippedOp(const std::string& op) {
+  std::vector<std::string> blacklist;
+  std::ifstream file("skip_op.txt");  
+  std::string line;
+
+  while (std::getline(file, line)) {
+    blacklist.push_back(line);
+  }
+
+  file.close();
+  
+  for (size_t i = 0; i < blacklist.size(); ++i) {
+    std::cout << blacklist[i];
+    if (i != blacklist.size() - 1) {
+      std::cout << ",";
+    }
+  }
+  std::cout << " has been fetched" << std::endl;
+  
+  for (const std::string& blacklistedOp : blacklist) {
+    if (op == blacklistedOp) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool IsOfficialOp(const std::string& domain, const std::string& op) {
   if (domain != "ai.onnx" && domain != "ai.onnx.ml" && !domain.empty()) {
     return false;
@@ -371,7 +398,8 @@ GetConstantNodes(const onnx::ModelProto& model) {
   // node is already topo sorted
   for (const auto& node : model.graph().node()) {
     // clang-format off
-    if (IsOfficialOp(node.domain(), node.op_type()) &&
+    if (!IsSkippedOp(node.op_type()) && 
+        IsOfficialOp(node.domain(), node.op_type()) &&
         IsDeterministic(node.domain(), node.op_type()) &&
         !IsQDQ(node.domain(), node.op_type()) &&
         !HasSubgraph(node) &&

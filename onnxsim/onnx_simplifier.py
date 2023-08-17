@@ -286,6 +286,12 @@ def main():
         type=str,
         nargs="*",
     )
+    parser.add_argument(
+        "--skip-op",
+        help="Skip ONNX operators. e.g. `onnxsim a.onnx b.onnx --skip-op Gather GatherND`.",
+        type=str,
+        nargs="*",
+    )
     parser.add_argument("--skip-constant-folding", help="Skip constant folding", action="store_true")
     parser.add_argument(
         "--input-shape",
@@ -392,6 +398,11 @@ def main():
                 style="bold red",
             )
         )
+    if args.skip_op:
+        with open("skip_op.txt", "w") as file:
+            for op in args.skip_op:
+                file.write(op + "\n")
+            print(".".join(args.skip_op) + " has been saved under skip_op.txt")
     assert not (args.skip_optimizer is not None and args.skip_optimization is not None)
     if args.skip_optimizer:
         print(
