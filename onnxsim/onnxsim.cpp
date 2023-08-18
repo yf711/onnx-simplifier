@@ -445,12 +445,12 @@ onnx::ModelProto _FoldConstant(const onnx::ModelProto& model) {
 
     std::cout << "\n\nConstant Nodes:" << std::endl;
     for (const auto& node : const_nodes) {
-      std::cout << node.name << "\t";
+      std::cout << node.name() << "\t";
     }
 
     std::cout << "\n\nNon-Constant Nodes:" << std::endl;
     for (const auto& node : non_const_nodes) {
-      std::cout << node.name << "\t";
+      std::cout << node.name() << "\t";
     }
 
     for (const auto& x : const_nodes) {
