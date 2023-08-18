@@ -420,7 +420,7 @@ GetConstantNodes(const onnx::ModelProto& model) {
                          node.output().end());
       const_nodes.push_back(node);
     } else {
-      if (IsSkippedOp(node.op_type()) {
+      if (IsSkippedOp(node.op_type(), blacklist) {
         std::cout << node.op_type() << " is skipped and put into non_const_nodes" << std::endl;
       }
       non_const_nodes.push_back(node);
