@@ -27,9 +27,9 @@ Config config;
 
 std::shared_ptr<const ModelExecutor> ModelExecutor::instance_ = nullptr;
 
-bool IsSkippedOp(const std::string& op) {
+std::vector<std::string> FetchBlacklistFromFile(const std::string& filename) {
   std::vector<std::string> blacklist;
-  std::ifstream file("skip_op.txt");  
+  std::ifstream file(filename);
   std::string line;
 
   while (std::getline(file, line)) {
@@ -37,7 +37,6 @@ bool IsSkippedOp(const std::string& op) {
   }
 
   file.close();
-  
   for (size_t i = 0; i < blacklist.size(); ++i) {
     std::cout << blacklist[i];
     if (i != blacklist.size() - 1) {
@@ -45,7 +44,12 @@ bool IsSkippedOp(const std::string& op) {
     }
   }
   std::cout << " has been fetched" << std::endl;
-  
+
+  return blacklist;
+}
+
+bool IsSkippedOp(const std::string& op,
+                 const std::vector<std::string>& blacklist) {
   for (const std::string& blacklistedOp : blacklist) {
     if (op == blacklistedOp) {
       return true;
@@ -395,10 +399,12 @@ GetConstantNodes(const onnx::ModelProto& model) {
   std::transform(
       model.graph().initializer().begin(), model.graph().initializer().end(),
       std::back_inserter(const_names), [](const auto& x) { return x.name(); });
+  std::vector<std::string> blacklist = FetchBlacklistFromFile("skip_op.txt");
   // node is already topo sorted
   for (const auto& node : model.graph().node()) {
     // clang-format off
-    if (!IsSkippedOp(node.op_type()) && 
+     std::cout << node.op_type() << std::endl;
+    if (!IsSkippedOp(node.op_type(), blacklist) && 
         IsOfficialOp(node.domain(), node.op_type()) &&
         IsDeterministic(node.domain(), node.op_type()) &&
         !IsQDQ(node.domain(), node.op_type()) &&
