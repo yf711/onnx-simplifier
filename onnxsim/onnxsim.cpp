@@ -420,6 +420,9 @@ GetConstantNodes(const onnx::ModelProto& model) {
                          node.output().end());
       const_nodes.push_back(node);
     } else {
+      if (IsSkippedOp(node.op_type()) {
+        std::cout << node.op_type() << " is skipped and put into non_const_nodes" << std::endl;
+      }
       non_const_nodes.push_back(node);
     }
   }
@@ -439,6 +442,29 @@ onnx::ModelProto _FoldConstant(const onnx::ModelProto& model) {
     onnx::ModelProto model;
     model.CopyFrom(tmp);
     const auto [const_nodes, non_const_nodes] = GetConstantNodes(model);
+
+    std::vector<std::string> const_op_types;
+    for (const auto& node : const_nodes) {
+      const_op_types.push_back(node.op_type());
+    }
+    std::sort(const_op_types.begin(), const_op_types.end());
+
+    std::vector<std::string> non_const_op_types;
+    for (const auto& node : non_const_nodes) {
+      non_const_op_types.push_back(node.op_type());
+    }
+    std::sort(non_const_op_types.begin(), non_const_op_types.end());
+
+    std::cout << "Constant Nodes:" << std::endl;
+    for (const auto& op_type : const_op_types) {
+      std::cout << op_type << std::endl;
+    }
+
+    std::cout << "\nNon-Constant Nodes:" << std::endl;
+    for (const auto& op_type : non_const_op_types) {
+      std::cout << op_type << std::endl;
+    }
+
     for (const auto& x : const_nodes) {
       RunOpAndAddInitializer(model, x);
     }
