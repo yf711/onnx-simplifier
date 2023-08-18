@@ -443,26 +443,14 @@ onnx::ModelProto _FoldConstant(const onnx::ModelProto& model) {
     model.CopyFrom(tmp);
     const auto [const_nodes, non_const_nodes] = GetConstantNodes(model);
 
-    std::vector<std::string> const_op_types;
+    std::cout << "\n\nConstant Nodes:" << std::endl;
     for (const auto& node : const_nodes) {
-      const_op_types.push_back(node.op_type());
+      std::cout << node.name << "\t";
     }
-    std::sort(const_op_types.begin(), const_op_types.end());
 
-    std::vector<std::string> non_const_op_types;
+    std::cout << "\n\nNon-Constant Nodes:" << std::endl;
     for (const auto& node : non_const_nodes) {
-      non_const_op_types.push_back(node.op_type());
-    }
-    std::sort(non_const_op_types.begin(), non_const_op_types.end());
-
-    std::cout << "Constant Nodes:" << std::endl;
-    for (const auto& op_type : const_op_types) {
-      std::cout << op_type << std::endl;
-    }
-
-    std::cout << "\nNon-Constant Nodes:" << std::endl;
-    for (const auto& op_type : non_const_op_types) {
-      std::cout << op_type << std::endl;
+      std::cout << node.name << "\t";
     }
 
     for (const auto& x : const_nodes) {
@@ -533,11 +521,17 @@ onnx::ModelProto Simplify(
 
   config.tensor_size_threshold = tensor_size_threshold;
   config.optimizer_passes.clear();
+  
+  const auto all_passes = onnx::optimization::GetFuseAndEliminationPass();
+  std::cout << "All available optimizers: " << std::endl;
+  for (const auto& pass : all_passes) {
+    std::cout << "- " << pass << std::endl;
+  }
+    
   // skip_optimizers == nullopt means skiping all optimizers, so
   // config.optimizer_passes is empty
   if (skip_optimizers) {
     std::vector<std::string> passes;
-    const auto all_passes = onnx::optimization::GetFuseAndEliminationPass();
     for (const auto& pass : all_passes) {
       if (std::find(skip_optimizers->begin(), skip_optimizers->end(), pass) ==
           skip_optimizers->end()) {
@@ -545,6 +539,11 @@ onnx::ModelProto Simplify(
       }
     }
     config.optimizer_passes = passes;
+  }
+
+  std::cout << "Optimizers used in the process: " << std::endl;
+  for (const auto& pass : config.optimizer_passes) {
+    std::cout << "- " << pass << std::endl;
   }
 
   auto FoldConstant = constant_folding ? _FoldConstant : Identity;

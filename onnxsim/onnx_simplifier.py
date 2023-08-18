@@ -402,7 +402,7 @@ def main():
         with open("skip_op.txt", "w") as file:
             for op in args.skip_op:
                 file.write(op + "\n")
-            print(".".join(args.skip_op) + " has been saved under skip_op.txt")
+            print(",".join(args.skip_op) + " has been saved under skip_op.txt")
     assert not (args.skip_optimizer is not None and args.skip_optimization is not None)
     if args.skip_optimizer:
         print(
